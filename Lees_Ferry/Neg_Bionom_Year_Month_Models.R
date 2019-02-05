@@ -17,7 +17,7 @@ library(foodbase)
 library(dplyr)
 library(ggplot2)
 library(ggthemes)
-library(xts)     # align.time (round to 15min) library(zoo)
+# library(xts)     # align.time (round to 15min) library(zoo)
 library(glmmTMB)
 library(here) # sets up relative paths
 
@@ -79,7 +79,7 @@ lf.dat$SpeciesID = tmp.ID
 #--------------------------------------
 # add in some other variables
 lf.dat$Year = as.factor(substr(lf.dat$Date, 1, 4))
-lf.dat$month = as.factor(substr(lf.dat$Date, 6,7))
+lf.dat$Month = as.factor(substr(lf.dat$Date, 6,7))
 
 # make jan 2008 --> 2007 
 # idx = which(substr(data4$Date,1,7) == "2008-01") 
@@ -124,6 +124,87 @@ lf.dat.3 <- filter(lf.dat.2, RiverMile == -11.5 | RiverMile == -11 | RiverMile =
 
 
 dat.in = lf.dat.3
-# could clean up all the temp data formatting objects here...
+# could clean up all the temp. data formatting objects here...
 # rm(list = setdiff(ls(), "dat.in"))
+#-----------------------------------------------------------------------------#
+# run some models for each taxa looking at year effects
+models = NULL  # variable to save model fits 
+taxa = unique(dat.in$SpeciesID)
+big.out = NULL
+
+for(i in 1:length(taxa)){
+  
+  taxa.sub = filter(dat.in, SpeciesID == taxa[i])
+  
+  start.time <- Sys.time()  # start timer
+  fm_1 <- glmmTMB(CountTotal ~ 0 + Year + (1|Month) + (1|RiverMile) + offset(log(Volume)),
+                  # fm_1 <- glmmTMB(count.sum ~ 0 + year + (1|month)  + offset(log(Volume)),
+                  data = taxa.sub,
+                  family = nbinom2)
+  
+  end.time = Sys.time()
+  time.taken = end.time - start.time
+  print(round(time.taken, 2))
+  
+  tmp.len = length(fixef(fm_1)[[1]])
+  
+  tmp.out = data.frame(matrix(NA, tmp.len, length(unique(dat.in$SpeciesID))))
+  tmp.out[,1] = rep(taxa[i], tmp.len)
+  
+  tmp.out[,2] = sort(as.numeric(paste(unique(dat.in$Year))))
+  
+  tmp.out[,3] = exp(fixef(fm_1)[[1]])
+  tmp.out[,4] = exp(confint(fm_1)[1:tmp.len,1])
+  tmp.out[,5] = exp(confint(fm_1)[1:tmp.len,2]) 
+  
+  models[[i]] = fm_1
+  
+  big.out[[i]] = tmp.out
+}
+
+model.counts = do.call(rbind, big.out)
+colnames(model.counts) = list("taxa", "year", "est", "ll", "ul")
+#-----------------------------------------------------------------------------#
+# make some plots of the year effect from the fitting above 
+windows(width = 10, height = 10, record = TRUE)
+
+name.key = data.frame(n1 = c("CHIL", "GAMM", "NZMS", "SIML", "OLIG"),
+                      n2 = c("Midges", "Gammarus", "New Zealand Mud Snail",
+                             "Black Flies", "Worms"))
+
+model.counts$name = name.key[match(model.counts[,1], name.key[,1]),2]
+
+model.counts$year2 = as.character(model.counts$year)
+# model.counts$year2 = as.numeric(model.counts$year)
+# model.counts$year2 = seq(2007, 2018,1)
+
+
+p = ggplot(model.counts, aes(x = year2, y = est)) +
+  geom_point() +
+  geom_errorbar(aes(ymax = ul, ymin = ll)) +
+  facet_wrap(~ name, scales = "free_y") + 
+  scale_x_discrete(labels = paste0("'", substr(as.character(seq(2008,2018,1)),3,4)),
+                     breaks = c(2008:2018)) +
+  labs(title = "Long-Term Drift Monitoring",
+       y = expression(paste('Count / m'^' 3')), x = "Year")  
+# p + theme_base()
+
+G = p + theme(axis.title.x = element_text(size = 14, vjust = -.1),
+              axis.title.y = element_text(size = 14, vjust = 1),
+              axis.text.x = element_text(size = 12, colour = "black"),
+              axis.text.y = element_text(size = 12, colour = "black"),
+              title = element_text(size = 16),
+              panel.background = element_rect(fill = "white"),
+              panel.grid.minor = element_line(colour = "white"),
+              panel.grid.major = element_line(colour = "white"),
+              panel.border = element_rect(colour = "black", fill = NA),
+              # panel.spacing = unit(c(1,1,1,1), "lines"),
+              strip.background = element_blank(),
+              strip.text = element_text(size = 14, vjust = 1),
+              legend.text = element_text(size = 12),
+              legend.title = element_text(size = 12),
+              legend.title.align = .5)
+G
+
+
 #-----------------------------------------------------------------------------#
