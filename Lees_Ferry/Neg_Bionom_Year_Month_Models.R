@@ -175,9 +175,6 @@ name.key = data.frame(n1 = c("CHIL", "GAMM", "NZMS", "SIML", "OLIG"),
 model.counts$name = name.key[match(model.counts[,1], name.key[,1]),2]
 
 model.counts$year2 = as.character(model.counts$year)
-# model.counts$year2 = as.numeric(model.counts$year)
-# model.counts$year2 = seq(2007, 2018,1)
-
 
 p = ggplot(model.counts, aes(x = year2, y = est)) +
   geom_point() +
@@ -187,7 +184,6 @@ p = ggplot(model.counts, aes(x = year2, y = est)) +
                      breaks = c(2008:2018)) +
   labs(title = "Long-Term Drift Monitoring",
        y = expression(paste('Count / m'^' 3')), x = "Year")  
-# p + theme_base()
 
 G = p + theme(axis.title.x = element_text(size = 14, vjust = -.1),
               axis.title.y = element_text(size = 14, vjust = 1),
@@ -207,4 +203,77 @@ G = p + theme(axis.title.x = element_text(size = 14, vjust = -.1),
 G
 
 
+#-----------------------------------------------------------------------------#
+# run some models for each taxa looking at month effects
+models.2 = NULL  # variable to save model fits 
+big.out.2 = NULL
+
+
+for(i in 1:length(taxa)){
+  
+  taxa.sub = filter(dat.in, SpeciesID == taxa[i])
+  
+  start.time <- Sys.time()  # start timer
+  fm_1 <- glmmTMB(CountTotal ~ 0 + (1|Year) + Month + (1|RiverMile) + offset(log(Volume)),
+                  data = taxa.sub,
+                  family = nbinom2)
+  
+  end.time = Sys.time()
+  time.taken = end.time - start.time
+  print(round(time.taken,2))
+  
+  tmp.len = length(fixef(fm_1)[[1]])
+  
+  tmp.out = data.frame(matrix(NA, tmp.len, length(unique(dat.in$SpeciesID))))
+  tmp.out[,1] = rep(taxa[i], tmp.len)
+  
+  tmp.out[,2] = sort(as.numeric(paste(unique(dat.in$Month))))
+  
+  tmp.out[,3] = exp(fixef(fm_1)[[1]])
+  tmp.out[,4] = exp(confint(fm_1)[1:tmp.len,1])
+  tmp.out[,5] = exp(confint(fm_1)[1:tmp.len,2]) 
+  
+  models.2[[i]] = fm_1
+  
+  big.out.2[[i]] = tmp.out
+}
+
+model.counts.2 = do.call(rbind, big.out.2)
+colnames(model.counts.2) = list("taxa", "month", "est", "ll", "ul")
+#-----------------------------------------------------------------------------#
+# make some month plots 
+windows(width = 10, height = 10, record = TRUE)
+
+model.counts.2$name = name.key[match(model.counts.2[,1], name.key[,1]),2]
+
+
+p2 = ggplot(model.counts.2, aes(x = month, y = est)) +
+  geom_point() +
+  geom_errorbar(aes(ymax = ul, ymin = ll)) + 
+  scale_x_continuous(breaks = c(1:12), labels = as.character(1:12)) +
+  facet_wrap(~ name, scales = "free_y") + 
+  labs(title = "Long-Term Drift Monitoring",
+       y = expression(paste('Count / m'^' 3')), x = "Month")  #
+# p + theme_base()
+
+G2 = p2 + theme(axis.title.x = element_text(size = 14, vjust = -.1),
+              axis.title.y = element_text(size = 14, vjust = 1),
+              axis.text.x = element_text(size = 12, colour = "black"),
+              axis.text.y = element_text(size = 12, colour = "black"),
+              title = element_text(size = 16),
+              panel.background = element_rect(fill = "white"),
+              panel.grid.minor = element_line(colour = "white"),
+              panel.grid.major = element_line(colour = "white"),
+              panel.border = element_rect(colour = "black", fill = NA),
+              # panel.spacing = unit(c(1,1,1,1), "lines"),
+              strip.background = element_blank(),
+              strip.text = element_text(size = 14, vjust = 1),
+              legend.text = element_text(size = 12),
+              legend.title = element_text(size = 12),
+              legend.title.align = .5)
+G2
+
+
+#-----------------------------------------------------------------------------#
+# End
 #-----------------------------------------------------------------------------#
