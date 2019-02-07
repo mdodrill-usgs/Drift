@@ -28,6 +28,7 @@ add.no.site = function(dat){
 
 # combines life stages of black flies & midges, returning the code for lavae
 # this should work for the biomass or specimens tables
+# requires dplyr
 collapse.taxa = function(dat){
   id = as.character(dat[,which(names(dat) == "SpeciesID")])
     
