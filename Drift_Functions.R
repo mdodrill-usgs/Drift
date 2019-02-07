@@ -26,7 +26,26 @@ add.no.site = function(dat){
 }
 
 
-
-
+# combines life stages of black flies & midges, returning the code for lavae
+# this should work for the biomass or specimens tables
+collapse.taxa = function(dat){
+  id = as.character(dat[,which(names(dat) == "SpeciesID")])
+    
+  tmp.id = ifelse(id == "CHIA", "CHIL", id)
+  tmp.id = ifelse(tmp.id == "CHIP", "CHIL", tmp.id)
+  
+  tmp.id = ifelse(tmp.id == "SIMA", "SIML", tmp.id)
+  tmp.id = ifelse(tmp.id == "SIMP", "SIML", tmp.id)
+  
+  dat$SpeciesID = tmp.id
+  
+  dat.out = group_by(dat, BarcodeID, SpeciesID) %>%
+            summarise_all(.funs = sum)
+  
+  u = paste(unique(tmp.id), collapse = " ")
+  message(paste0("Here are the new taxa codes: ", u))
+  
+  return(dat.out)
+}
 
 
