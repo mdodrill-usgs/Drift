@@ -7,8 +7,6 @@
 #
 #  To Do:
 #  * Lab processing of IVb samples
-#  * Format data for CY:
-#    - 1 row per sample, cols for biomass of big 5
 #                                                                     
 ###############################################################################
 library(dplyr)
@@ -39,9 +37,11 @@ sub.1 = d.1[which(d.1$TripID %in% no.trips),]
 # sub.2 = sub.1[which(sub.1$site %in% c("I", "II", "III", "IVa", "IVb")),]
 sub.2 = sub.1[which(sub.1$Site %in% c("I", "IVb")),]
 
-sub.3 = sub.2[which(sub.2$DepthIntegrated == 0),]
+# removed these, per email
+# sub.3 = sub.2[which(sub.2$DepthIntegrated == 0),]
+# sub.4 = sub.3[which(sub.3$TimeDay == "Day"),]
 
-sub.4 = sub.3[which(sub.3$TimeDay == "Day"),]
+no.samp = sub.2
 
 #--------------------------------------
 # After NO
@@ -58,7 +58,7 @@ table(tmp.3$RiverMile)
 
 #-----------------------------------------------------------------------------#
 # get all of the samples the were subset above
-all = rbind(sub.4, tmp.3)
+all = rbind(no.samp, tmp.3)
 
 dat = sampspec(samp = all, species = "Big9")
 
@@ -104,6 +104,6 @@ bio.ltl.2 = spread(bio.ltl, key = SpeciesID, value = mass.tot)
 
 drift = left_join(ltl.samps, bio.ltl.2, by = "BarcodeID")
 
-write.csv(drift, "CY_Drift_Biomass_2019_02_07.csv", row.names = F)
+write.csv(drift, "CY_Drift_Biomass_2019_02_08.csv", row.names = F)
 #-----------------------------------------------------------------------------#
 # End
