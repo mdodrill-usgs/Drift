@@ -317,7 +317,7 @@ sub.model.counts.2 = model.counts.2[which(model.counts.2$name != "Worms"),]
 
 p2 = ggplot(sub.model.counts.2, aes(x = month, y = est)) +
   geom_point() +
-  geom_errorbar(aes(ymax = ul, ymin = ll)) + 
+  geom_errorbar(aes(ymax = ul, ymin = ll), width = 0) + 
   scale_x_continuous(breaks = c(1:12), labels = as.character(1:12)) +
   facet_wrap(~ name, scales = "free_y") + 
   labs(title = "Long-Term Drift Monitoring",
