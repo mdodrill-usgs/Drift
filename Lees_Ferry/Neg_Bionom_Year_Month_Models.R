@@ -2,7 +2,7 @@
 #                                                                      Feb 2019
 #
 #   Fit count models (neg.binom) to the drift data to look
-#   at yearly and monthlyeffects
+#   at yearly and monthly effects
 #     
 #  Notes:
 #  * Commented out is code for changing the sample dates (:/) & adding in
@@ -13,6 +13,9 @@
 #                                                                     
 ###############################################################################
 rm(list = ls(all = TRUE))
+# library(devtools)
+# install_github(repo = 'jmuehlbauer-usgs/R-packages', subdir = 'foodbase')
+
 library(foodbase)
 library(dplyr)
 library(ggplot2)
@@ -79,15 +82,20 @@ lf.dat$SpeciesID = tmp.ID
 #--------------------------------------
 # add in some other variables
 lf.dat$Year = as.factor(substr(lf.dat$Date, 1, 4))
-lf.dat$Month = as.factor(substr(lf.dat$Date, 6,7))
+lf.dat$Month = as.factor(substr(lf.dat$Date, 6, 7))
+# lf.dat$Year = substr(lf.dat$Date, 1, 4)
+# lf.dat$Month = substr(lf.dat$Date, 6, 7)
 
-# make jan 2008 --> 2007 
-# idx = which(substr(data4$Date,1,7) == "2008-01") 
-# idx2 = which(substr(data4$Date,1,10) == "2008-03-03")
-# data4$year = as.numeric(substr(data4$Date,1,4))
+# make jan 2008 --> 2007 (kinda fucked up)
+# idx = which(substr(lf.dat$Date,1,7) == "2008-01")  # These samples are not showing up with the new DB (b/c)
+# idx2 = which(substr(lf.dat$Date,1,10) == "2008-03-03")  # this gets dropped below...
+
 # data4[idx,which(names(data4) == "year")] = "2007"
-# data4[idx2,which(names(data4) == "year")] = "2007"
+# lf.dat[idx2, which(names(lf.dat) == "Year")] = "2007"
 # data3 = data4
+
+# lf.dat$Year = as.factor(lf.dat$Year)
+# lf.dat$Month = as.factor(lf.dat$Month)
 
 #-----------------------------------------------------------------------------#
 # adding in the discharge data 
@@ -169,7 +177,7 @@ colnames(model.counts) = list("taxa", "year", "est", "ll", "ul")
 windows(width = 10, height = 10, record = TRUE)
 
 name.key = data.frame(n1 = c("CHIL", "GAMM", "NZMS", "SIML", "OLIG"),
-                      n2 = c("Midges", "Gammarus", "New Zealand Mud Snail",
+                      n2 = c("Midges", "Gammarus", "New Zealand Mud Snails",
                              "Black Flies", "Worms"))
 
 model.counts$name = name.key[match(model.counts[,1], name.key[,1]),2]
@@ -178,7 +186,37 @@ model.counts$year2 = as.character(model.counts$year)
 
 p = ggplot(model.counts, aes(x = year2, y = est)) +
   geom_point() +
-  geom_errorbar(aes(ymax = ul, ymin = ll)) +
+  geom_errorbar(aes(ymax = ul, ymin = ll), width = 0) +
+  facet_wrap(~ name, scales = "free_y") + 
+  scale_x_discrete(labels = paste0("'", substr(as.character(seq(2008,2018,1)),3,4)),
+                     breaks = c(2008:2018)) +
+  labs(title = "Long-Term Drift Monitoring",
+       y = expression(paste('Count / m'^' 3')), x = "Year")  
+
+G = p + theme(axis.title.x = element_text(size = 14, vjust = -.1),
+              axis.title.y = element_text(size = 14, vjust = 1),
+              axis.text.x = element_text(size = 12, colour = "black"),
+              axis.text.y = element_text(size = 12, colour = "black"),
+              title = element_text(size = 16),
+              panel.background = element_rect(fill = "white"),
+              panel.grid.minor = element_line(colour = "white"),
+              panel.grid.major = element_line(colour = "white"),
+              panel.border = element_rect(colour = "black", fill = NA),
+              # panel.spacing = unit(c(1,1,1,1), "lines"),
+              strip.background = element_blank(),
+              strip.text = element_text(size = 14, vjust = 1),
+              legend.text = element_text(size = 12),
+              legend.title = element_text(size = 12),
+              legend.title.align = .5)
+G
+
+#-----------------------------
+# only 4 taxa on the plot
+sub.model.counts = model.counts[which(model.counts$name != "Worms"),]
+
+p = ggplot(sub.model.counts, aes(x = year2, y = est)) +
+  geom_point() +
+  geom_errorbar(aes(ymax = ul, ymin = ll), width = 0) +
   facet_wrap(~ name, scales = "free_y") + 
   scale_x_discrete(labels = paste0("'", substr(as.character(seq(2008,2018,1)),3,4)),
                      breaks = c(2008:2018)) +
@@ -248,6 +286,36 @@ model.counts.2$name = name.key[match(model.counts.2[,1], name.key[,1]),2]
 
 
 p2 = ggplot(model.counts.2, aes(x = month, y = est)) +
+  geom_point() +
+  geom_errorbar(aes(ymax = ul, ymin = ll)) + 
+  scale_x_continuous(breaks = c(1:12), labels = as.character(1:12)) +
+  facet_wrap(~ name, scales = "free_y") + 
+  labs(title = "Long-Term Drift Monitoring",
+       y = expression(paste('Count / m'^' 3')), x = "Month")  #
+# p + theme_base()
+
+G2 = p2 + theme(axis.title.x = element_text(size = 14, vjust = -.1),
+              axis.title.y = element_text(size = 14, vjust = 1),
+              axis.text.x = element_text(size = 12, colour = "black"),
+              axis.text.y = element_text(size = 12, colour = "black"),
+              title = element_text(size = 16),
+              panel.background = element_rect(fill = "white"),
+              panel.grid.minor = element_line(colour = "white"),
+              panel.grid.major = element_line(colour = "white"),
+              panel.border = element_rect(colour = "black", fill = NA),
+              # panel.spacing = unit(c(1,1,1,1), "lines"),
+              strip.background = element_blank(),
+              strip.text = element_text(size = 14, vjust = 1),
+              legend.text = element_text(size = 12),
+              legend.title = element_text(size = 12),
+              legend.title.align = .5)
+G2
+
+#--------------------------------------
+# Only 4 taxa 
+sub.model.counts.2 = model.counts.2[which(model.counts.2$name != "Worms"),]
+
+p2 = ggplot(sub.model.counts.2, aes(x = month, y = est)) +
   geom_point() +
   geom_errorbar(aes(ymax = ul, ymin = ll)) + 
   scale_x_continuous(breaks = c(1:12), labels = as.character(1:12)) +
