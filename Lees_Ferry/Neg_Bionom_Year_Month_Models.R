@@ -240,6 +240,61 @@ G = p + theme(axis.title.x = element_text(size = 14, vjust = -.1),
               legend.title.align = .5)
 G
 
+#-----------------------------
+# only 4 taxa on the plot, show data...and some summaries
+sub.model.counts = model.counts[which(model.counts$name != "Worms"),]
+
+dat.in$name = name.key[match(dat.in$SpeciesID, name.key[,1]),2]
+sub.dat.in = dat.in[which(dat.in$name != "Worms"),]
+
+u.name = unique(sub.model.counts$name)
+
+lims = list(c(0,5), c(0,.5), c(0,25), c(0,.3))
+
+for(i in 1:4){
+  sub.sub = sub.dat.in[which(sub.dat.in$name == u.name[i]),]
+  sub.mod = sub.model.counts[which(sub.model.counts$name == u.name[i]),]
+  
+  sub.mu = group_by(sub.sub, Year) %>%
+           summarize(mean = mean(CountTotal / Volume),
+                     median = median(CountTotal / Volume))
+  
+  p = ggplot(sub.mod, aes(x = year2, y = est)) +
+    geom_point() +
+    geom_errorbar(aes(ymax = ul, ymin = ll), width = 0) +
+    geom_jitter(data = sub.sub, aes(x = Year, y = CountTotal/Volume),
+                shape = 1, color = "gray50", alpha = .5) +
+    geom_point() +
+    geom_errorbar(aes(ymax = ul, ymin = ll), width = 0) +
+    scale_x_discrete(labels = paste0("'", substr(as.character(seq(2008,2018,1)),3,4)),
+                     breaks = c(2008:2018)) +
+    geom_point(data = sub.mu, aes(x = Year, y = mean), color = "red") +
+    geom_point(data = sub.mu, aes(x = Year, y = median), color = "blue") +
+    # geom_boxplot(data = sub.sub, aes(x = Year, y = CountTotal/Volume), fill = NA, outlier.alpha = 0) +
+    # geom_violin(data = sub.sub, aes(x = Year, y = CountTotal/Volume)) +
+    
+    labs(title = paste("Long-Term Drift Monitoring - ", u.name[i], sep = " "),
+         y = expression(paste('Count / m'^' 3')), x = "Year") +
+    ylim(lims[[i]])
+  
+  G = p + theme(axis.title.x = element_text(size = 14, vjust = -.1),
+                axis.title.y = element_text(size = 14, vjust = 1),
+                axis.text.x = element_text(size = 12, colour = "black"),
+                axis.text.y = element_text(size = 12, colour = "black"),
+                title = element_text(size = 16),
+                panel.background = element_rect(fill = "white"),
+                panel.grid.minor = element_line(colour = "white"),
+                panel.grid.major = element_line(colour = "white"),
+                panel.border = element_rect(colour = "black", fill = NA),
+                # panel.spacing = unit(c(1,1,1,1), "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(size = 14, vjust = 1),
+                legend.text = element_text(size = 12),
+                legend.title = element_text(size = 12),
+                legend.title.align = .5)
+  print(G)
+}
+
 
 #-----------------------------------------------------------------------------#
 # run some models for each taxa looking at month effects
