@@ -16,8 +16,8 @@ library(here)
 
 source(paste0(getwd(), "/Drift_Functions.R"))
 
-# d.tmp = readDB(gear = "Drift", type = "Sample", updater = TRUE)
-d.tmp = readDB(gear = "Drift", type = "Sample", updater = FALSE)
+d.tmp = readDB(gear = "Drift", type = "Sample", updater = TRUE)
+# d.tmp = readDB(gear = "Drift", type = "Sample", updater = FALSE)
 
 d.1 = d.tmp[d.tmp$GearID == 4,]
 #--------------------------------------
@@ -104,6 +104,6 @@ bio.ltl.2 = spread(bio.ltl, key = SpeciesID, value = mass.tot)
 
 drift = left_join(ltl.samps, bio.ltl.2, by = "BarcodeID")
 
-write.csv(drift, "CY_Drift_Biomass_2019_02_08.csv", row.names = F)
+write.csv(drift, "CY_Drift_Biomass_Site_I_IVb_2019_03_11.csv", row.names = F)
 #-----------------------------------------------------------------------------#
 # End
