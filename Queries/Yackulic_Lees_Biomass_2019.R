@@ -18,7 +18,9 @@ d.tmp = readDB(gear = "Drift", type = "Sample", updater = FALSE)
 # d.1 = d.tmp[d.tmp$RiverMile == 0,]
 d.1 = d.tmp[d.tmp$Reach == "CRLeesFerry",]
 
-d.2 = d.1[d.1$Date >= "2012-01-01",]
+# d.2 = d.1[d.1$Date >= "2012-01-01",]
+# all time periods
+d.2 = d.1
 
 d.3 = d.2[d.2$GearID == 4,]
 
@@ -70,6 +72,6 @@ bio.ltl.2 = spread(bio.ltl, key = SpeciesID, value = mass.tot)
 
 drift = left_join(ltl.samps, bio.ltl.2, by = "BarcodeID")
 
-# write.csv(drift, "CY_Drift_Lees_Biomass_2019_03_11.csv", row.names = F)
+write.csv(drift, "CY_Drift_Lees_Biomass_2019_03_11b.csv", row.names = F)
 #-----------------------------------------------------------------------------#
 # End
