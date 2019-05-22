@@ -4,6 +4,7 @@
 #     
 #  Notes:
 #  * Sources 'Drift_Functions.R'
+#  * Last updated on 5/22/2019
 #
 #  To Do:
 #  * Lab processing of IVb samples
@@ -104,6 +105,6 @@ bio.ltl.2 = spread(bio.ltl, key = SpeciesID, value = mass.tot)
 
 drift = left_join(ltl.samps, bio.ltl.2, by = "BarcodeID")
 
-write.csv(drift, "CY_Drift_Biomass_Site_I_IVb_2019_03_11.csv", row.names = F)
+# write.csv(drift, "CY_Drift_Biomass_Site_I_IVb_2019_05_22.csv", row.names = F)
 #-----------------------------------------------------------------------------#
 # End
