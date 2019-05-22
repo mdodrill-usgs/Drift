@@ -5,6 +5,7 @@
 # Notes: 
 # * See previous version: U:\Desktop\FB_DOWN\Analysis\DRIFT_DOWNSTREAM\Korman
 #  'Get_Drift_New_v1'
+# * Last updated on 5/22/2019
 #  
 ###############################################################################
 # library(devtools)
@@ -12,7 +13,7 @@
 library(dplyr)
 library(foodbase)
 
-d.tmp = readDB(gear = "Drift", type = "Sample", updater = FALSE)
+d.tmp = readDB(gear = "Drift", type = "Sample", updater = TRUE)
 
 # d.1 = d.tmp[d.tmp$RiverMile == 0,]
 d.1 = d.tmp[d.tmp$Reach == "CRLeesFerry",]
@@ -60,7 +61,7 @@ ltl.mass = dat$Biomass[,c(1,2,24)]
 
 dat3 = left_join(dat2, ltl.mass, by = c("BarcodeID", "SpeciesID"))
 
-write.csv(dat3, "JK_Drift_Lees_Count_and_Biomass_2019_02_13.csv", row.names = F)
+# write.csv(dat3, "JK_Drift_Lees_Count_and_Biomass_2019_05_22.csv", row.names = F)
 #-----------------------------------------------------------------------------#
 # some quick plots
 library(ggplot2)
